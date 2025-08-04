@@ -62,7 +62,7 @@ job-scrapper-platform/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/job-scrapper-platform.git
+   git clone https://github.com/aspiro98/job-scrapper-platform.git
    cd job-scrapper-platform
    ```
 
