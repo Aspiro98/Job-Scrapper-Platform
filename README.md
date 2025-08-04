@@ -40,15 +40,15 @@ A comprehensive job scraping and automation platform that scrapes job listings f
 
 ```
 job-scrapper-platform/
-├── app.py                          # Main Flask web application
-├── application_system.py           # Job application automation system
+├── app.py                         # Main Flask web application
+├── application_system.py          # Job application automation system
 ├── form_automation.py             # Web form automation engine
 ├── scrapers/                      # Scrapy spiders and utilities
 │   ├── spiders/                   # Job scraping spiders
 │   └── utils/                     # Scraping utilities
 ├── templates/                     # Web interface templates
 ├── requirements.txt               # Python dependencies
-└── README.md                     # This file
+└── README.md                      # This file
 ```
 
 ## 🚀 Quick Start
