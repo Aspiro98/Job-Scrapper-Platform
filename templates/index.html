@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Scraper Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .header h1 {
+            color: #2c3e50;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .stats-card {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .table thead th {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+        .job-title {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .location-badge {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .company-badge {
+            background: #e9ecef;
+            color: #495057;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .btn-refresh {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-refresh:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+        .btn-apply {
+            background: #28a745;
+            border: none;
+            border-radius: 20px;
+            padding: 5px 15px;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .btn-apply:hover {
+            background: #218838;
+            color: white;
+            transform: translateY(-1px);
+        }
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+        }
+        .no-data {
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+        }
+        .search-box {
+            margin-bottom: 20px;
+        }
+        .search-box input {
+            border-radius: 25px;
+            border: 2px solid #e9ecef;
+            padding: 10px 20px;
+            transition: all 0.3s ease;
+        }
+        .search-box input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        /* Table column width fixes */
+        .table {
+            table-layout: fixed;
+            width: 100%;
+        }
+        
+        .table th:nth-child(1), .table td:nth-child(1) {
+            width: 5%; /* Checkbox column */
+        }
+        
+        .table th:nth-child(2), .table td:nth-child(2) {
+            width: 25%; /* Job Title column */
+        }
+        
+        .table th:nth-child(3), .table td:nth-child(3) {
+            width: 12%; /* Company column */
+        }
+        
+        .table th:nth-child(4), .table td:nth-child(4) {
+            width: 10%; /* Experience column */
+        }
+        
+        .table th:nth-child(5), .table td:nth-child(5) {
+            width: 10%; /* Role column */
+        }
+        
+        .table th:nth-child(6), .table td:nth-child(6) {
+            width: 15%; /* Location column */
+        }
+        
+        .table th:nth-child(7), .table td:nth-child(7) {
+            width: 13%; /* Posted Date column */
+            min-width: 120px; /* Ensure minimum width */
+        }
+        
+        .table th:nth-child(8), .table td:nth-child(8) {
+            width: 10%; /* Action column */
+        }
+        
+        /* Ensure content doesn't overflow */
+        .table td {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            vertical-align: middle;
+        }
+        
+        /* Posted date badge styling */
+        .posted-date-badge {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            white-space: nowrap;
+            display: inline-block;
+        }
+        
+        /* Sortable column styling */
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s ease;
+        }
+        
+        .sortable:hover {
+            background: linear-gradient(45deg, #5a6fd8, #6a5acd) !important;
+        }
+        
+        .sortable i {
+            margin-left: 5px;
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+        
+        .sortable.asc i::before {
+            content: "\f0de"; /* fa-sort-up */
+            opacity: 1;
+            color: #fff;
+        }
+        
+        .sortable.desc i::before {
+            content: "\f0dd"; /* fa-sort-down */
+            opacity: 1;
+            color: #fff;
+        }
+        
+        .sortable.asc, .sortable.desc {
+            background: linear-gradient(45deg, #5a6fd8, #6a5acd) !important;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .table th:nth-child(4), .table td:nth-child(4),
+            .table th:nth-child(5), .table td:nth-child(5) {
+                display: none; /* Hide Experience and Role on mobile */
+            }
+            
+            .table th:nth-child(2), .table td:nth-child(2) {
+                width: 35%; /* Increase Job Title width on mobile */
+            }
+            
+            .table th:nth-child(6), .table td:nth-child(6) {
+                width: 20%; /* Increase Location width on mobile */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-12 col-xl-10">
+                <div class="main-container">
+                    <!-- Header -->
+                    <div class="header">
+                        <h1><i class="fas fa-briefcase"></i> Job Scraper Dashboard</h1>
+                        <p class="text-muted">Real-time job listings from scraped data</p>
+                    </div>
+
+                    <!-- Stats Card -->
+                    <div class="stats-card">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h3 id="totalJobs">{{ total_jobs }}</h3>
+                                <p>Total Jobs</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h3 id="lastUpdated">{{ "Now" }}</h3>
+                                <p>Last Updated</p>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-refresh" onclick="refreshData()">
+                                    <i class="fas fa-sync-alt"></i> Refresh Data
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Filters -->
+                    <div class="filters-container mb-4">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <select class="form-select" id="companyFilter">
+                                    <option value="">All Companies</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select" id="experienceFilter">
+                                    <option value="">All Experience Levels</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select" id="roleFilter">
+                                    <option value="">All Roles</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select" id="countryFilter">
+                                    <option value="">All Countries</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select" id="stateFilter">
+                                    <option value="">All States/Cities</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select" id="perPageFilter">
+                                    <option value="25">25 per page</option>
+                                    <option value="50" selected>50 per page</option>
+                                    <option value="100">100 per page</option>
+                                    <option value="200">200 per page</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                                    <i class="fas fa-refresh"></i> Reset
+                                </button>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-warning w-100" onclick="scrapeNewJobs()" id="scrapeBtn">
+                                    <i class="fas fa-download"></i> Scrape New Jobs
+                                </button>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-success w-100" onclick="applyAllJobs()" id="applyBtn" disabled>
+                                    <i class="fas fa-paper-plane"></i> Apply for All
+                                </button>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-info w-100" onclick="toggleDateMode()" id="dateModeBtn">
+                                    <i class="fas fa-clock"></i> <span id="dateModeText">Fast Mode</span>
+                                </button>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-outline-primary w-100" onclick="shuffleJobs()" id="shuffleBtn">
+                                    <i class="fas fa-random"></i> Shuffle Jobs
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <input type="text" class="form-control" id="searchInput" placeholder="Search jobs by title, location, or company...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Table Container -->
+                    <div class="table-container">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="jobsTable">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+                                        <th class="sortable" onclick="sortTable('title')">
+                                            Job Title <i class="fas fa-sort" id="sort-title"></i>
+                                        </th>
+                                        <th class="sortable" onclick="sortTable('company')">
+                                            Company <i class="fas fa-sort" id="sort-company"></i>
+                                        </th>
+                                        <th class="sortable" onclick="sortTable('experience')">
+                                            Experience (Beta) <i class="fas fa-sort" id="sort-experience"></i>
+                                        </th>
+                                        <th class="sortable" onclick="sortTable('role')">
+                                            Role <i class="fas fa-sort" id="sort-role"></i>
+                                        </th>
+                                        <th class="sortable" onclick="sortTable('location')">
+                                            Location <i class="fas fa-sort" id="sort-location"></i>
+                                        </th>
+                                        <th class="sortable" onclick="sortTable('posted_date')">
+                                            Posted Date (Beta) <i class="fas fa-sort" id="sort-posted_date"></i>
+                                        </th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="jobsTableBody">
+                                    <tr>
+                                        <td colspan="8" class="loading">
+                                            <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                                            <p>Loading jobs...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination Controls -->
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <div class="pagination-info">
+                                <span id="paginationInfo">Showing 0 of 0 jobs</span>
+                            </div>
+                            <nav aria-label="Job pagination">
+                                <ul class="pagination" id="paginationControls">
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#" tabindex="-1">Previous</a>
+                                    </li>
+                                    <li class="page-item active">
+                                        <a class="page-link" href="#">1</a>
+                                    </li>
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#">Next</a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+
+
+        // Load filter options from API
+        function loadFilterOptions() {
+            fetch('/api/filters')
+                .then(response => response.json())
+                .then(data => {
+                    populateFilter('companyFilter', data.companies);
+                    populateFilter('experienceFilter', data.experience_levels);
+                    populateFilter('roleFilter', data.role_categories);
+                    
+                    // Populate country filter
+                    const countries = Object.keys(data.location_filters || {});
+                    populateFilter('countryFilter', countries);
+                })
+                .catch(error => console.error('Error loading filters:', error));
+        }
+
+        // Populate filter dropdown
+        function populateFilter(filterId, options) {
+            const select = document.getElementById(filterId);
+            // Clear existing options except the first one
+            while (select.children.length > 1) {
+                select.removeChild(select.lastChild);
+            }
+            options.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option;
+                opt.textContent = option;
+                select.appendChild(opt);
+            });
+        }
+
+        // Load state/city options for selected country
+        function loadStateOptions() {
+            const country = document.getElementById('countryFilter').value;
+            const stateFilter = document.getElementById('stateFilter');
+            
+            // Clear existing options except the first one
+            while (stateFilter.children.length > 1) {
+                stateFilter.removeChild(stateFilter.lastChild);
+            }
+            
+            if (!country) {
+                return;
+            }
+            
+            fetch(`/api/location/${encodeURIComponent(country)}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Combine states and cities
+                    const allOptions = [...data.states, ...data.cities];
+                    populateFilter('stateFilter', allOptions);
+                })
+                .catch(error => console.error('Error loading state options:', error));
+        }
+
+        // Global variables for pagination
+        let currentPage = 1;
+        let totalPages = 1;
+        let totalJobs = 0;
+
+        // Apply filters
+        function applyFilters(page = 1) {
+            currentPage = page;
+            const company = document.getElementById('companyFilter').value;
+            const experience = document.getElementById('experienceFilter').value;
+            const role = document.getElementById('roleFilter').value;
+            const country = document.getElementById('countryFilter').value;
+            const state = document.getElementById('stateFilter').value;
+            const search = document.getElementById('searchInput').value;
+            const perPage = document.getElementById('perPageFilter').value;
+
+            const params = new URLSearchParams();
+            if (company) params.append('company', company);
+            if (experience) params.append('experience', experience);
+            if (role) params.append('role', role);
+            if (country) params.append('country', country);
+            if (state) params.append('state', state);
+            if (search) params.append('search', search);
+            params.append('page', page);
+            params.append('per_page', perPage);
+
+            fetch(`/api/jobs?${params.toString()}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Store all jobs for sorting
+                    allJobs = data.jobs;
+                    
+                    updateTable(data.jobs);
+                    updatePagination(data);
+                    document.getElementById('totalJobs').textContent = data.total;
+                })
+                .catch(error => console.error('Error applying filters:', error));
+        }
+
+        // Update table with filtered data
+        function updateTable(jobs) {
+            const tableBody = document.getElementById('jobsTableBody');
+            tableBody.innerHTML = '';
+
+            if (jobs.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="no-data">
+                            <i class="fas fa-search fa-3x mb-3"></i>
+                            <p>No jobs found matching your criteria</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            jobs.forEach(job => {
+                const row = document.createElement('tr');
+                // Create unique job ID by combining job ID and company
+                const uniqueJobId = `${job.id}_${job.company}`;
+                row.innerHTML = `
+                    <td>
+                        <input type="checkbox" class="job-checkbox" value="${uniqueJobId}" onchange="updateApplyButton()">
+                    </td>
+                    <td>
+                        <div class="job-title">${job.title}</div>
+                        <small class="text-muted">ID: ${job.id}</small>
+                    </td>
+                    <td>
+                        <span class="company-badge">${job.company}</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-${job.experience_color}">${job.experience_display}</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-${job.role_color}">${job.role_display}</span>
+                    </td>
+                    <td>
+                        <span class="location-badge">${job.location}</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-${job.posted_date_color}" title="Source: ${job.posted_date_source}">
+                            ${job.posted_date_display || 'Unknown'}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="${job.link}" target="_blank" class="btn-apply">
+                            <i class="fas fa-external-link-alt"></i> Apply
+                        </a>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Update pagination controls
+        function updatePagination(data) {
+            totalPages = data.total_pages;
+            totalJobs = data.total;
+            currentPage = data.page;
+            
+            // Update pagination info
+            const startJob = (currentPage - 1) * data.per_page + 1;
+            const endJob = Math.min(currentPage * data.per_page, totalJobs);
+            document.getElementById('paginationInfo').textContent = 
+                `Showing ${startJob}-${endJob} of ${totalJobs} jobs`;
+            
+            // Update pagination controls
+            const paginationControls = document.getElementById('paginationControls');
+            paginationControls.innerHTML = '';
+            
+            // Previous button
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${data.has_prev ? '' : 'disabled'}`;
+            prevLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Previous</a>`;
+            paginationControls.appendChild(prevLi);
+            
+            // Page numbers
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const pageLi = document.createElement('li');
+                pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                pageLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${i})">${i}</a>`;
+                paginationControls.appendChild(pageLi);
+            }
+            
+            // Next button
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${data.has_next ? '' : 'disabled'}`;
+            nextLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Next</a>`;
+            paginationControls.appendChild(nextLi);
+        }
+        
+        // Change page function
+        function changePage(page) {
+            if (page >= 1 && page <= totalPages) {
+                applyFilters(page);
+            }
+        }
+        
+        // Reset filters function
+        function resetFilters() {
+            document.getElementById('companyFilter').value = '';
+            document.getElementById('experienceFilter').value = '';
+            document.getElementById('roleFilter').value = '';
+            document.getElementById('countryFilter').value = '';
+            document.getElementById('stateFilter').value = '';
+            document.getElementById('searchInput').value = '';
+            document.getElementById('perPageFilter').value = '50';
+            applyFilters(1);
+        }
+
+        // Add event listeners for filters
+        document.getElementById('companyFilter').addEventListener('change', () => applyFilters(1));
+        document.getElementById('experienceFilter').addEventListener('change', () => applyFilters(1));
+        document.getElementById('roleFilter').addEventListener('change', () => applyFilters(1));
+        document.getElementById('countryFilter').addEventListener('change', () => {
+            loadStateOptions();
+            applyFilters(1);
+        });
+        document.getElementById('stateFilter').addEventListener('change', () => applyFilters(1));
+        document.getElementById('perPageFilter').addEventListener('change', () => applyFilters(1));
+
+        // Search functionality (debounced)
+        let searchTimeout;
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => applyFilters(1), 300);
+        });
+
+        // Refresh data functionality
+        function refreshData() {
+            const refreshBtn = document.querySelector('.btn-refresh');
+            const originalText = refreshBtn.innerHTML;
+            
+            refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+            refreshBtn.disabled = true;
+
+            fetch('/refresh')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Failed to refresh data');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error refreshing data');
+                })
+                .finally(() => {
+                    refreshBtn.innerHTML = originalText;
+                    refreshBtn.disabled = false;
+                });
+        }
+
+        // Scrape new jobs functionality
+        function scrapeNewJobs() {
+            const scrapeBtn = document.getElementById('scrapeBtn');
+            const originalText = scrapeBtn.innerHTML;
+            
+            // Confirm with user
+            if (!confirm('This will scrape jobs from all companies. This may take 15-30 minutes. Continue?')) {
+                return;
+            }
+            
+            scrapeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Starting...';
+            scrapeBtn.disabled = true;
+            scrapeBtn.className = 'btn btn-info w-100';
+
+            fetch('/scrape')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        scrapeBtn.innerHTML = '<i class="fas fa-clock"></i> Scraping... (15-30 min)';
+                        scrapeBtn.className = 'btn btn-warning w-100';
+                        
+                        // Start checking status
+                        checkScrapeStatus();
+                        
+                        alert('Scraping started! This will take 15-30 minutes. The page will refresh automatically when complete.');
+                    } else {
+                        alert(data.message || 'Failed to start scraping');
+                        scrapeBtn.innerHTML = originalText;
+                        scrapeBtn.disabled = false;
+                        scrapeBtn.className = 'btn btn-warning w-100';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error starting scraping');
+                    scrapeBtn.innerHTML = originalText;
+                    scrapeBtn.disabled = false;
+                    scrapeBtn.className = 'btn btn-warning w-100';
+                });
+        }
+
+        // Check scraping status
+        function checkScrapeStatus() {
+            fetch('/scrape-status')
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.is_running) {
+                        // Scraping completed
+                        const scrapeBtn = document.getElementById('scrapeBtn');
+                        scrapeBtn.innerHTML = '<i class="fas fa-check"></i> Complete!';
+                        scrapeBtn.className = 'btn btn-success w-100';
+                        scrapeBtn.disabled = false;
+                        
+                        // Refresh page after 2 seconds
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000);
+                    } else {
+                        // Still running, check again in 30 seconds
+                        setTimeout(checkScrapeStatus, 30000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking status:', error);
+                    // Try again in 30 seconds
+                    setTimeout(checkScrapeStatus, 30000);
+                });
+        }
+
+        // Job selection functions
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const jobCheckboxes = document.querySelectorAll('.job-checkbox');
+            
+            jobCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+            
+            updateApplyButton();
+        }
+
+        function updateApplyButton() {
+            const selectedJobs = document.querySelectorAll('.job-checkbox:checked');
+            const applyBtn = document.getElementById('applyBtn');
+            
+            if (selectedJobs.length > 0) {
+                applyBtn.disabled = false;
+                applyBtn.innerHTML = `<i class="fas fa-paper-plane"></i> Apply for ${selectedJobs.length} Jobs`;
+            } else {
+                applyBtn.disabled = true;
+                applyBtn.innerHTML = `<i class="fas fa-paper-plane"></i> Apply for All`;
+            }
+        }
+
+        function applyAllJobs() {
+            const selectedJobs = document.querySelectorAll('.job-checkbox:checked');
+            const jobIds = Array.from(selectedJobs).map(checkbox => checkbox.value);
+            
+            if (jobIds.length === 0) {
+                alert('Please select at least one job to apply for.');
+                return;
+            }
+            
+            if (!confirm(`Are you sure you want to prepare applications for ${jobIds.length} jobs? This will analyze job descriptions and tailor your resume.`)) {
+                return;
+            }
+            
+            const applyBtn = document.getElementById('applyBtn');
+            const originalText = applyBtn.innerHTML;
+            
+            applyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            applyBtn.disabled = true;
+            
+            // First select the jobs
+            fetch('/api/select-jobs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ job_ids: jobIds })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Then start processing applications
+                    return fetch('/api/apply-all', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                } else {
+                    throw new Error(data.message || 'Failed to select jobs');
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    applyBtn.innerHTML = '<i class="fas fa-clock"></i> Processing Applications...';
+                    applyBtn.className = 'btn btn-info w-100';
+                    
+                    // Start checking status
+                    checkApplicationStatus();
+                    
+                    alert('Application processing started! This will analyze job descriptions and tailor your resume. Check back in a few minutes.');
+                } else {
+                    throw new Error(data.message || 'Failed to start application processing');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error: ' + error.message);
+                applyBtn.innerHTML = originalText;
+                applyBtn.disabled = false;
+                applyBtn.className = 'btn btn-success w-100';
+            });
+        }
+
+        function checkApplicationStatus() {
+            fetch('/api/application-status')
+                .then(response => response.json())
+                .then(data => {
+                    const applyBtn = document.getElementById('applyBtn');
+                    
+                    if (data.is_processing) {
+                        // Still processing, check again in 10 seconds
+                        setTimeout(checkApplicationStatus, 10000);
+                    } else {
+                        // Processing completed
+                        applyBtn.innerHTML = '<i class="fas fa-check"></i> Applications Ready!';
+                        applyBtn.className = 'btn btn-success w-100';
+                        applyBtn.disabled = false;
+                        
+                        // Show applications
+                        showApplications();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking status:', error);
+                    setTimeout(checkApplicationStatus, 10000);
+                });
+        }
+
+        function showApplications() {
+            fetch('/api/applications')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.applications.length > 0) {
+                        const message = `Applications prepared for ${data.applications.length} jobs!\n\nYou can now review and submit them individually.`;
+                        alert(message);
+                        
+                        // You could open a modal here to show the applications
+                        console.log('Prepared applications:', data.applications);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching applications:', error);
+                });
+        }
+
+        // Date estimation mode functions
+        function toggleDateMode() {
+            const dateModeBtn = document.getElementById('dateModeBtn');
+            const dateModeText = document.getElementById('dateModeText');
+            
+            // Get current mode
+            fetch('/api/date-estimation/mode')
+                .then(response => response.json())
+                .then(data => {
+                    const newMode = data.mode === 'fast' ? 'accurate' : 'fast';
+                    const modeText = newMode === 'fast' ? 'Fast Mode' : 'Accurate Mode';
+                    
+                    // Set new mode
+                    return fetch('/api/date-estimation/mode', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ mode: newMode })
+                    });
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        dateModeText.textContent = data.mode === 'fast' ? 'Fast Mode' : 'Accurate Mode';
+                        dateModeBtn.className = data.mode === 'fast' ? 'btn btn-info w-100' : 'btn btn-warning w-100';
+                        
+                        // Refresh the page to show updated dates
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error toggling date mode:', error);
+                    alert('Error toggling date mode');
+                });
+        }
+
+        function clearDateCache() {
+            fetch('/api/date-estimation/clear-cache', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Date cache cleared! The page will refresh to show updated dates.');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error clearing cache:', error);
+                alert('Error clearing date cache');
+            });
+        }
+
+        function shuffleJobs() {
+            const shuffleBtn = document.getElementById('shuffleBtn');
+            const originalText = shuffleBtn.innerHTML;
+            
+            shuffleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Shuffling...';
+            shuffleBtn.disabled = true;
+            
+            // Clear all filters and reload with random sorting
+            document.getElementById('companyFilter').value = '';
+            document.getElementById('experienceFilter').value = '';
+            document.getElementById('roleFilter').value = '';
+            document.getElementById('countryFilter').value = '';
+            document.getElementById('stateFilter').value = '';
+            document.getElementById('searchInput').value = '';
+            
+            // Reload with fresh data (will trigger random sorting on backend)
+            applyFilters(1);
+            
+            setTimeout(() => {
+                shuffleBtn.innerHTML = originalText;
+                shuffleBtn.disabled = false;
+            }, 1000);
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            fetch('/api/jobs')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('totalJobs').textContent = data.total;
+                    document.getElementById('lastUpdated').textContent = 'Now';
+                })
+                .catch(error => console.error('Error updating stats:', error));
+        }, 30000);
+        
+        // Sorting functionality
+        let currentSort = { field: null, direction: 'asc' };
+        let allJobs = []; // Store all jobs for client-side sorting
+        
+        function sortTable(field) {
+            const sortIcon = document.getElementById(`sort-${field}`);
+            
+            // Clear previous sort indicators
+            document.querySelectorAll('.sortable').forEach(th => {
+                th.classList.remove('asc', 'desc');
+            });
+            
+            // Determine sort direction
+            if (currentSort.field === field) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.field = field;
+                currentSort.direction = 'asc';
+            }
+            
+            // Update sort indicator
+            sortIcon.parentElement.classList.add(currentSort.direction);
+            
+            // Sort the jobs
+            sortJobs(field, currentSort.direction);
+        }
+        
+        function sortJobs(field, direction) {
+            if (!allJobs || allJobs.length === 0) {
+                console.warn('No jobs to sort');
+                return;
+            }
+            
+            const sortedJobs = [...allJobs].sort((a, b) => {
+                let aVal = getSortValue(a, field);
+                let bVal = getSortValue(b, field);
+                
+                // Handle null/undefined values
+                if (aVal === null || aVal === undefined) aVal = '';
+                if (bVal === null || bVal === undefined) bVal = '';
+                
+                // Special handling for dates
+                if (field === 'posted_date') {
+                    if (direction === 'asc') {
+                        return aVal - bVal; // Oldest first
+                    } else {
+                        return bVal - aVal; // Newest first
+                    }
+                }
+                
+                // Convert to strings for comparison
+                aVal = String(aVal).toLowerCase();
+                bVal = String(bVal).toLowerCase();
+                
+                if (direction === 'asc') {
+                    return aVal.localeCompare(bVal);
+                } else {
+                    return bVal.localeCompare(aVal);
+                }
+            });
+            
+            // Update table with sorted data
+            updateTable(sortedJobs);
+            
+            // Update pagination info
+            document.getElementById('totalJobs').textContent = sortedJobs.length;
+            document.getElementById('paginationInfo').textContent = `Showing 1-${Math.min(50, sortedJobs.length)} of ${sortedJobs.length} jobs`;
+        }
+        
+        function getSortValue(job, field) {
+            switch (field) {
+                case 'title':
+                    return job.title;
+                case 'company':
+                    return job.company;
+                case 'experience':
+                    return job.experience_display;
+                case 'role':
+                    return job.role_display;
+                case 'location':
+                    return job.location;
+                case 'posted_date':
+                    // For posted date, we need to convert to a sortable format
+                    if (job.posted_date) {
+                        try {
+                            return new Date(job.posted_date);
+                        } catch (e) {
+                            // If date parsing fails, use a fallback based on display text
+                            const display = job.posted_date_display || 'Unknown';
+                            if (display === 'Today') return new Date();
+                            if (display === 'Yesterday') return new Date(Date.now() - 24*60*60*1000);
+                            if (display.includes('days ago')) {
+                                const days = parseInt(display.match(/(\d+)/)[1]);
+                                return new Date(Date.now() - days*24*60*60*1000);
+                            }
+                            if (display.includes('week')) {
+                                const weeks = parseInt(display.match(/(\d+)/)[1]);
+                                return new Date(Date.now() - weeks*7*24*60*60*1000);
+                            }
+                            if (display.includes('month')) {
+                                const months = parseInt(display.match(/(\d+)/)[1]);
+                                return new Date(Date.now() - months*30*24*60*60*1000);
+                            }
+                            return new Date(0); // Unknown dates go to the end
+                        }
+                    }
+                    return new Date(0); // Unknown dates go to the end
+                default:
+                    return '';
+            }
+        }
+        
+        // Load initial data with pagination
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFilterOptions();
+            applyFilters(1);
+            
+            // Set initial date mode button state
+            fetch('/api/date-estimation/mode')
+                .then(response => response.json())
+                .then(data => {
+                    const dateModeBtn = document.getElementById('dateModeBtn');
+                    const dateModeText = document.getElementById('dateModeText');
+                    
+                    if (data.mode === 'accurate') {
+                        dateModeText.textContent = 'Accurate Mode';
+                        dateModeBtn.className = 'btn btn-warning w-100';
+                    } else {
+                        dateModeText.textContent = 'Fast Mode';
+                        dateModeBtn.className = 'btn btn-info w-100';
+                    }
+                })
+                .catch(error => console.error('Error loading date mode:', error));
+        });
+    </script>
+</body>
+</html> 
